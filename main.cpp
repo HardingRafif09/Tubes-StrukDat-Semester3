@@ -1,17 +1,22 @@
 #include "produk.h"
 #include "pelanggan.h"
 
+/* Catatan: menu memakai if-else (bukan switch) supaya tidak ada
+   'break' di dalam perulangan, sesuai aturan tugas besar. */
+
 /* ================= DATA AWAL ================= */
 
 void isiDataProduk(BSTProduk &T) {
+    /* I.S. : T sudah dibuat (kosong)
+       F.S. : T berisi 5 produk contoh */
     bool ok;
 
     infotypeProduk d[5] = {
-        {"P003", "RAM 16GB", "Komponen", 0, 650000, 20},
-        {"P001", "Keyboard Mechanical", "Aksesoris", 0, 450000, 15},
-        {"P005", "Monitor 24 Inch", "Display", 0, 1500000, 8},
-        {"P002", "Mouse Gaming", "Aksesoris", 0, 250000, 25},
-        {"P004", "SSD 1TB", "Komponen", 0, 1200000, 12}
+        {"P003", "RAM 16GB",            "Komponen",  0,  650000, 20},
+        {"P001", "Keyboard Mechanical", "Aksesoris", 0,  450000, 15},
+        {"P005", "Monitor 24 Inch",     "Display",   0, 1500000,  8},
+        {"P002", "Mouse Gaming",        "Aksesoris", 0,  250000, 25},
+        {"P004", "SSD 1TB",             "Komponen",  0, 1200000, 12}
     };
 
     for (int i = 0; i < 5; i++) {
@@ -20,6 +25,8 @@ void isiDataProduk(BSTProduk &T) {
 }
 
 void isiDataPelanggan(ListPelanggan &L) {
+    /* I.S. : L sudah dibuat (kosong)
+       F.S. : L berisi 3 pelanggan contoh */
     bool ok;
 
     infotypePelanggan d[3] = {
@@ -36,6 +43,8 @@ void isiDataPelanggan(ListPelanggan &L) {
 /* ================= MENU PRODUK ================= */
 
 void menuTambahProduk(BSTProduk &T) {
+    /* I.S. : T terdefinisi
+       F.S. : produk baru masuk ke T jika datanya valid dan kodenya belum dipakai */
     infotypeProduk x;
     bool ok;
 
@@ -71,12 +80,15 @@ void menuTambahProduk(BSTProduk &T) {
 }
 
 void menuCariProduk(BSTProduk T) {
+    /* I.S. : T terdefinisi
+       F.S. : data produk tercetak jika ketemu, pesan jika tidak */
     string kode;
+    adrProduk p;
 
     cout << "Kode produk : ";
     getline(cin, kode);
 
-    adrProduk p = searchProduk(T, kode);
+    p = searchProduk(T, kode);
 
     if (p != NULL) {
         tampilProduk(p);
@@ -86,13 +98,16 @@ void menuCariProduk(BSTProduk T) {
 }
 
 void menuHapusProduk(BSTProduk &T) {
+    /* I.S. : T terdefinisi
+       F.S. : produk terhapus jika ada dan belum punya riwayat pembelian */
     string kode;
+    adrProduk p;
     bool ok;
 
     cout << "Kode produk : ";
     getline(cin, kode);
 
-    adrProduk p = searchProduk(T, kode);
+    p = searchProduk(T, kode);
 
     if (p == NULL) {
         cout << "Produk tidak ditemukan.\n";
@@ -100,11 +115,16 @@ void menuHapusProduk(BSTProduk &T) {
         cout << "Produk sudah memiliki riwayat pembelian.\n";
     } else {
         deleteProduk(T, kode, ok);
-        cout << "Produk berhasil dihapus.\n";
+
+        if (ok) {
+            cout << "Produk berhasil dihapus.\n";
+        }
     }
 }
 
 void menuTampilProduk(BSTProduk T) {
+    /* I.S. : T terdefinisi
+       F.S. : seluruh produk tercetak sesuai traversal yang dipilih */
     int pilih;
 
     if (isEmpty(T)) {
@@ -131,6 +151,8 @@ void menuTampilProduk(BSTProduk T) {
 }
 
 void menuProduk(BSTProduk &T) {
+    /* I.S. : T terdefinisi
+       F.S. : menu berjalan sampai pengguna memilih 0 (kembali) */
     int pilih;
 
     do {
@@ -162,14 +184,68 @@ void menuProduk(BSTProduk &T) {
 
 /* ================= MENU PELANGGAN ================= */
 
-void menuTambahPelanggan(ListPelanggan &L, BSTProduk &T) {
-    infotypePelanggan x;
+void catatPembelian(adrPelanggan p, BSTProduk &T) {
+    /* I.S. : p tidak NULL, T tidak kosong
+       F.S. : produk yang dipilih dicatat ke daftar pembelian p selama
+              pengguna memilih lanjut. Setiap pembelian berhasil mengurangi
+              stok produk dan menambah jumlah transaksinya */
     infotypePembelian beli;
-
-    bool ok;
-    char lagi;
+    adrProduk produk;
     string kodeProduk;
     int jumlah;
+    char lagi;
+
+    do {
+        cout << "\n=== DAFTAR PRODUK ===\n";
+        inOrder(T.root);
+
+        cout << "\nKode produk yang dibeli : ";
+        getline(cin, kodeProduk);
+
+        produk = searchProduk(T, kodeProduk);
+
+        if (produk == NULL) {
+            cout << "Produk tidak ditemukan.\n";
+        } else {
+            cout << "Nama produk : " << produk->info.nama << endl;
+            cout << "Jenis produk : " << produk->info.jenis << endl;
+
+            cout << "Jumlah beli : ";
+            cin >> jumlah;
+            cin.ignore(1000, '\n');
+
+            if (jumlah <= 0) {
+                cout << "Jumlah pembelian tidak valid.\n";
+            } else if (jumlah > produk->info.stok) {
+                cout << "Stok tidak mencukupi.\n";
+            } else {
+                beli.kodeProduk = produk->info.kode;
+                beli.jumlah = jumlah;
+                beli.hargaBeli = produk->info.harga;
+
+                insertPembelian(p->pembelian, beli);
+
+                produk->info.stok -= jumlah;
+                produk->info.transaksi++;
+
+                cout << "Pembelian berhasil dicatat.\n";
+            }
+        }
+
+        cout << "Tambah produk lagi? (y/n) : ";
+        cin >> lagi;
+        cin.ignore(1000, '\n');
+
+    } while (lagi == 'y' || lagi == 'Y');
+}
+
+void menuTambahPelanggan(ListPelanggan &L, BSTProduk &T) {
+    /* I.S. : L dan T terdefinisi
+       F.S. : pelanggan baru masuk ke L jika kodenya belum dipakai,
+              lalu pengguna boleh langsung mencatat pembeliannya */
+    infotypePelanggan x;
+    adrPelanggan p;
+    bool ok;
 
     cout << "\n=== TAMBAH PELANGGAN ===\n";
 
@@ -179,80 +255,32 @@ void menuTambahPelanggan(ListPelanggan &L, BSTProduk &T) {
     cout << "Nama pelanggan : ";
     getline(cin, x.nama);
 
-    if (searchPelanggan(L, x.kode) != NULL) {
+    insertPelanggan(L, x, ok);
+
+    if (!ok) {
         cout << "Kode pelanggan sudah ada.\n";
     } else {
-        insertPelanggan(L, x, ok);
+        cout << "\nPelanggan berhasil ditambahkan.\n";
 
-        if (ok) {
-            adrPelanggan p = searchPelanggan(L, x.kode);
-
-            cout << "\nPelanggan berhasil ditambahkan.\n";
-
-            if (!isEmpty(T)) {
-                do {
-                    cout << "\n=== DAFTAR PRODUK ===\n";
-                    inOrder(T.root);
-
-                    cout << "\nKode produk yang dibeli : ";
-                    getline(cin, kodeProduk);
-
-                    adrProduk produk = searchProduk(T, kodeProduk);
-
-                    if (produk == NULL) {
-                        cout << "Produk tidak ditemukan.\n";
-                    } else {
-                        cout << "Nama produk : "
-                             << produk->info.nama << endl;
-
-                        cout << "Jenis produk : "
-                             << produk->info.jenis << endl;
-
-                        cout << "Jumlah beli : ";
-                        cin >> jumlah;
-                        cin.ignore(1000, '\n');
-
-                        if (jumlah <= 0) {
-                            cout << "Jumlah pembelian tidak valid.\n";
-                        } else if (jumlah > produk->info.stok) {
-                            cout << "Stok tidak mencukupi.\n";
-                        } else {
-                            beli.kodeProduk = produk->info.kode;
-                            beli.jumlah = jumlah;
-                            beli.hargaBeli = produk->info.harga;
-
-                            // Simpan produk ke pelanggan
-                            insertPembelian(p->pembelian, beli);
-
-                            // Kurangi stok produk
-                            produk->info.stok -= jumlah;
-
-                            // Tambah jumlah transaksi
-                            produk->info.transaksi++;
-
-                            cout << "Pembelian berhasil dicatat.\n";
-                        }
-                    }
-
-                    cout << "Tambah produk lagi? (y/n) : ";
-                    cin >> lagi;
-                    cin.ignore(1000, '\n');
-
-                } while (lagi == 'y' || lagi == 'Y');
-            } else {
-                cout << "Data produk masih kosong.\n";
-            }
+        if (isEmpty(T)) {
+            cout << "Data produk masih kosong.\n";
+        } else {
+            p = searchPelanggan(L, x.kode);
+            catatPembelian(p, T);
         }
     }
 }
 
 void menuCariPelanggan(ListPelanggan L) {
+    /* I.S. : L terdefinisi
+       F.S. : data pelanggan tercetak jika ketemu, pesan jika tidak */
     string kode;
+    adrPelanggan p;
 
     cout << "Kode pelanggan : ";
     getline(cin, kode);
 
-    adrPelanggan p = searchPelanggan(L, kode);
+    p = searchPelanggan(L, kode);
 
     if (p != NULL) {
         cout << "Pelanggan ditemukan: "
@@ -264,6 +292,8 @@ void menuCariPelanggan(ListPelanggan L) {
 }
 
 void menuHapusPelanggan(ListPelanggan &L) {
+    /* I.S. : L terdefinisi
+       F.S. : pelanggan beserta pembeliannya terhapus jika ada */
     string kode;
     bool ok;
 
@@ -280,6 +310,8 @@ void menuHapusPelanggan(ListPelanggan &L) {
 }
 
 void rekapPelanggan(ListPelanggan L, BSTProduk T) {
+    /* I.S. : L dan T terdefinisi
+       F.S. : setiap pelanggan tercetak beserta produk yang dibeli */
     adrPelanggan p = L.first;
 
     if (p == NULL) {
@@ -288,12 +320,8 @@ void rekapPelanggan(ListPelanggan L, BSTProduk T) {
         cout << "\n========== REKAP PELANGGAN ==========\n";
 
         while (p != NULL) {
-            cout << "\nKode pelanggan : "
-                 << p->info.kode << endl;
-
-            cout << "Nama pelanggan : "
-                 << p->info.nama << endl;
-
+            cout << "\nKode pelanggan : " << p->info.kode << endl;
+            cout << "Nama pelanggan : " << p->info.nama << endl;
             cout << "Produk yang dibeli:\n";
 
             tampilPembelian(p->pembelian, T);
@@ -306,6 +334,8 @@ void rekapPelanggan(ListPelanggan L, BSTProduk T) {
 }
 
 void menuPelanggan(ListPelanggan &L, BSTProduk &T) {
+    /* I.S. : L dan T terdefinisi
+       F.S. : menu berjalan sampai pengguna memilih 0 (kembali) */
     int pilih;
 
     do {

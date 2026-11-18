@@ -1,19 +1,27 @@
 #include "pelanggan.h"
 
-/* ================= PEMBELIAN ================= */
+/* ================= PEMBELIAN (CHILD LIST) ================= */
 
 void createListPembelian(ListPembelian &L) {
+    /* I.S. : L sembarang
+       F.S. : L.first = NULL */
     L.first = NULL;
 }
 
 adrPembelian createElmPembelian(infotypePembelian x) {
+    /* I.S. : x terdefinisi
+       F.S. : mengembalikan elemen baru berisi x */
     adrPembelian p = new elmPembelian;
+
     p->info = x;
     p->next = NULL;
+
     return p;
 }
 
 void insertPembelian(ListPembelian &L, infotypePembelian x) {
+    /* I.S. : L terdefinisi
+       F.S. : x ditambah di awal list (insert first) */
     adrPembelian baru = createElmPembelian(x);
 
     baru->next = L.first;
@@ -21,6 +29,8 @@ void insertPembelian(ListPembelian &L, infotypePembelian x) {
 }
 
 void tampilPembelian(ListPembelian L, BSTProduk T) {
+    /* I.S. : L dan T terdefinisi
+       F.S. : pembelian tercetak beserta subtotal dan total */
     adrPembelian p = L.first;
     adrProduk produk;
     int no = 1;
@@ -45,10 +55,8 @@ void tampilPembelian(ListPembelian L, BSTProduk T) {
             cout << "   Jumlah: " << p->info.jumlah << endl;
             cout << "   Harga: Rp "
                  << formatRupiah(p->info.hargaBeli) << endl;
-
             cout << "   Subtotal: Rp "
-                 << formatRupiah(
-                    p->info.hargaBeli * p->info.jumlah)
+                 << formatRupiah(p->info.hargaBeli * p->info.jumlah)
                  << endl;
 
             total += p->info.hargaBeli * p->info.jumlah;
@@ -57,12 +65,13 @@ void tampilPembelian(ListPembelian L, BSTProduk T) {
             no++;
         }
 
-        cout << "Total pembelian: Rp "
-             << formatRupiah(total) << endl;
+        cout << "Total pembelian: Rp " << formatRupiah(total) << endl;
     }
 }
 
 void deleteAllPembelian(ListPembelian &L) {
+    /* I.S. : L terdefinisi
+       F.S. : semua elemen dihapus, L kosong */
     adrPembelian p;
 
     while (L.first != NULL) {
@@ -72,28 +81,35 @@ void deleteAllPembelian(ListPembelian &L) {
     }
 }
 
-/* ================= PELANGGAN ================= */
+/* ================= PELANGGAN (PARENT LIST) ================= */
 
 void createList(ListPelanggan &L) {
+    /* I.S. : L sembarang
+       F.S. : L.first = NULL */
     L.first = NULL;
 }
 
 adrPelanggan createElmPelanggan(infotypePelanggan x) {
+    /* I.S. : x terdefinisi
+       F.S. : mengembalikan elemen baru dengan daftar pembelian kosong */
     adrPelanggan p = new elmPelanggan;
 
     p->info = x;
     p->next = NULL;
-
     createListPembelian(p->pembelian);
 
     return p;
 }
 
 bool isEmptyPelanggan(ListPelanggan L) {
+    /* I.S. : L terdefinisi
+       F.S. : true jika list kosong */
     return L.first == NULL;
 }
 
 adrPelanggan searchPelanggan(ListPelanggan L, string kode) {
+    /* I.S. : L terdefinisi
+       F.S. : mengembalikan alamat elemen berkode 'kode', atau NULL */
     adrPelanggan p = L.first;
 
     while (p != NULL && p->info.kode != kode) {
@@ -103,19 +119,19 @@ adrPelanggan searchPelanggan(ListPelanggan L, string kode) {
     return p;
 }
 
-void insertPelanggan(ListPelanggan &L,
-                     infotypePelanggan x,
-                     bool &berhasil) {
+void insertPelanggan(ListPelanggan &L, infotypePelanggan x, bool &berhasil) {
+    /* I.S. : L terdefinisi
+       F.S. : x ditambah di akhir list jika kodenya belum ada */
     adrPelanggan baru, last;
 
     if (searchPelanggan(L, x.kode) != NULL) {
-        berhasil = false;
+        berhasil = false;                 // kode kembar
     } else {
         baru = createElmPelanggan(x);
 
-        if (L.first == NULL) {
+        if (L.first == NULL) {            // list kosong
             L.first = baru;
-        } else {
+        } else {                          // cari elemen terakhir
             last = L.first;
 
             while (last->next != NULL) {
@@ -129,9 +145,9 @@ void insertPelanggan(ListPelanggan &L,
     }
 }
 
-void deletePelanggan(ListPelanggan &L,
-                     string kode,
-                     bool &berhasil) {
+void deletePelanggan(ListPelanggan &L, string kode, bool &berhasil) {
+    /* I.S. : L terdefinisi
+       F.S. : elemen berkode 'kode' beserta pembeliannya dihapus jika ada */
     adrPelanggan p = L.first;
     adrPelanggan prev = NULL;
 
@@ -141,11 +157,11 @@ void deletePelanggan(ListPelanggan &L,
     }
 
     if (p == NULL) {
-        berhasil = false;
+        berhasil = false;                 // tidak ditemukan
     } else {
-        if (prev == NULL) {
+        if (prev == NULL) {               // hapus elemen pertama
             L.first = p->next;
-        } else {
+        } else {                          // hapus tengah atau akhir
             prev->next = p->next;
         }
 
@@ -157,15 +173,15 @@ void deletePelanggan(ListPelanggan &L,
 }
 
 void tampilPelanggan(ListPelanggan L) {
+    /* I.S. : L terdefinisi
+       F.S. : semua pelanggan tercetak */
     adrPelanggan p = L.first;
 
     if (p == NULL) {
         cout << "Data pelanggan masih kosong.\n";
     } else {
         while (p != NULL) {
-            cout << p->info.kode << " | "
-                 << p->info.nama << endl;
-
+            cout << p->info.kode << " | " << p->info.nama << endl;
             p = p->next;
         }
     }
